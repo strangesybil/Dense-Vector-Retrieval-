@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Web-Search-Engines-HW2
 
 Summary: Disk-based inverted index search engine written in C++ using BM25 ranking over MS MARCO passages.
@@ -68,3 +69,6 @@ Use query processor:
 Type in "./query" to start the program. The program will then prompt the user: "What are you searching for?" The user will then type in their query. After retrieving the results and printing out the ranked results and their snippets, the program will prompt the user again to type in their query. If they wish to quit, type in "/q". 
 
 >>>>>>> 710d60213a6c9fa661d22b293873d3a5689b814a
+=======
+# Dense-Vector-Retrieval-
+>>>>>>> 297be8fdd14baa26c067db3337a66b36082fbeff
