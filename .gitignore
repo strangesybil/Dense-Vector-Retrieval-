@@ -1,0 +1,23 @@
+# macOS
+.DS_Store
+
+# data (too big for GitHub)
+Data/
+*.tar.gz
+*.tsv
+*.h5
+
+# built index files, wherever they end up
+Built files/
+*.bin
+lexicon.txt
+
+# compiled binaries
+BM25/indexer
+BM25/merger
+BM25/query
+BM25/test_varbyte
+BM25/test_inverlist
+
+# run files
+Runs/
