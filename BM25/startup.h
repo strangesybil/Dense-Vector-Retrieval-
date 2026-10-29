@@ -10,6 +10,7 @@ struct IndexData
     uint32_t numDocs = 0;
     vector<uint64_t> passageOffset; // snippet
     ifstream collect;               // snippet
+    vector<string> pids;
 };
 
 void docTable(const string &filename, IndexData &data)
@@ -49,6 +50,7 @@ void passaget(const string &filename, IndexData &data) // where does each line s
     while (data.passageOffset.size() < data.numDocs && getline(f, line))
     {
         data.passageOffset.push_back(bytecounter);
+        data.pids.push_back(line.substr(0, line.find('\t')));
         bytecounter += line.size() + 1;
     }
     data.collect.open(filename, ios::binary);

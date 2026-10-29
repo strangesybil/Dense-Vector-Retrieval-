@@ -15,6 +15,8 @@
 using namespace std;
 
 const int BLOCK_SIZE = 128;
+const string RUN_DIR = "Built files/tmp_runs/";
+const string OUT_DIR = "Built files/";
 struct runRead // contains my identifying term
 {
     string identTerm;           // ie. "magic"
@@ -33,7 +35,7 @@ using MinHeap = priority_queue<runRead, vector<runRead>, compareRunRead>; // min
 
 int getRunCount()
 { // need to pass runCount from indexer.cpp for the for-loop later on
-    ifstream count_file("runs/run_count.txt");
+    ifstream count_file(RUN_DIR + "run_count.txt");
     int runCount;
     count_file >> runCount; // read run count number
     count_file.close();
@@ -58,13 +60,14 @@ vector<ifstream> opensRuns(int runCount) // i'm looking at all the run files ALL
 {
     vector<ifstream> runFiles; // keeping all of them open
     for (int i = 0; i < runCount; i++)
-    {                                                                       // open every run file in binary mode
-        ifstream runFile("runs/run_" + to_string(i) + ".bin", ios::binary); // opnes runfile with same logic from parser
+    {
+        string path = RUN_DIR + "run_" + to_string(i) + ".bin"; // open every run file in binary mode
+        ifstream runFile(path, ios::binary);                    // opnes runfile with same logic from parser
         if (!runFile.is_open())
         {
             cerr << "Error opening file: runs/run_" << i << ".bin" << endl;
             cerr << "Merger is running in: " << filesystem::current_path() << endl;
-            cerr << "File exists from here? " << filesystem::exists("runs/run_" + to_string(i) + ".bin") << endl;
+            cerr << "File exists from here? " << filesystem::exists(path) << endl;
             cerr << "Reason: " << strerror(errno) << endl;
             exit(1);
         }
@@ -155,28 +158,28 @@ void writeu32(ofstream &encoded, uint32_t b)
 }
 void writeTermEntry(ofstream &indexFile, ofstream &lexFile, const string &term, const vector<pair<int, int>> &postings) // we store docId gaps which are smaller
 {                                                                                                                       // TERM them where does it start? what is the offset? how many documents does it appear in
-    uint64_t offset = indexFile.tellp(); // where is the pointer now
-    size_t df = postings.size(); // how many documents does this term appear in
-    size_t numBlocks = (df + BLOCK_SIZE - 1) / BLOCK_SIZE; // how many blocks of 128 are needed to hold these postings -> we round up in C++
+    uint64_t offset = indexFile.tellp();                                                                                // where is the pointer now
+    size_t df = postings.size();                                                                                        // how many documents does this term appear in
+    size_t numBlocks = (df + BLOCK_SIZE - 1) / BLOCK_SIZE;                                                              // how many blocks of 128 are needed to hold these postings -> we round up in C++
 
     vector<uint32_t> lastDocIDs, docSizes, freqSizes;
     vector<uint8_t> payload; // all my compressed data for one term ie. [block 0 gaps][block 0 freqs]
-    uint32_t prev = 0; // carries across blocks
+    uint32_t prev = 0;       // carries across blocks
 
     for (size_t b = 0; b < numBlocks; b++)
     {
         size_t start = b * BLOCK_SIZE;
-        size_t end = min(start + BLOCK_SIZE, df); // which one is smaller 
-        vector<uint8_t> docBytes, freqBytes; // docbytes is one block's docid gaps
+        size_t end = min(start + BLOCK_SIZE, df); // which one is smaller
+        vector<uint8_t> docBytes, freqBytes;      // docbytes is one block's docid gaps
         for (size_t i = start; i < end; i++)
         {
             uint32_t docID = static_cast<uint32_t>(postings[i].first);
-            varbyteEncode(docID - prev, docBytes); // stores gaps not docId
+            varbyteEncode(docID - prev, docBytes);                               // stores gaps not docId
             varbyteEncode(static_cast<uint32_t>(postings[i].second), freqBytes); // stores the frequency too
             prev = docID;
         }
-        lastDocIDs.push_back(prev); // previous docid
-        docSizes.push_back(docBytes.size()); // how many bytes this block's gaps take up 
+        lastDocIDs.push_back(prev);          // previous docid
+        docSizes.push_back(docBytes.size()); // how many bytes this block's gaps take up
         freqSizes.push_back(freqBytes.size());
         payload.insert(payload.end(), docBytes.begin(), docBytes.end());
         payload.insert(payload.end(), freqBytes.begin(), freqBytes.end());
@@ -191,8 +194,8 @@ void writeTermEntry(ofstream &indexFile, ofstream &lexFile, const string &term, 
     }
     indexFile.write(reinterpret_cast<const char *>(payload.data()), payload.size());
 
-    uint64_t length = static_cast<uint64_t>(indexFile.tellp()) - offset; // position in index.bin - offset=how much space header and payload take up
-    lexFile << term << ' ' << offset << ' ' << length << ' ' << df << '\n'; // "magic" 
+    uint64_t length = static_cast<uint64_t>(indexFile.tellp()) - offset;    // position in index.bin - offset=how much space header and payload take up
+    lexFile << term << ' ' << offset << ' ' << length << ' ' << df << '\n'; // "magic"
 }
 void runMerge(MinHeap &minHeap, vector<ifstream> &runFiles, ofstream &indexFile, ofstream &lexFile) // handles one term per cycle ie. "magic" in one run, "model" in the next
 {
@@ -217,8 +220,8 @@ int main()
     vector<ifstream> runFiles = opensRuns(runCount);
     MinHeap minheap = initializeHeap(runCount, runFiles);
 
-    ofstream indexFile("index.bin", ios::binary);
-    ofstream lexFile("lexicon.txt");
+    ofstream indexFile(OUT_DIR + "index.bin", ios::binary);
+    ofstream lexFile(OUT_DIR + "lexicon.txt");
     if (!lexFile || !indexFile)
     {
         cerr << "Failed to open output files." << endl;

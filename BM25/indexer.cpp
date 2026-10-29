@@ -47,7 +47,7 @@ vector<string> tokens(string text)
 
 void flushRun(map<string, vector<pair<int, int>>> &postings, int &runCount) // at the end, data is safe in disk so i can flush it out of RAM
 {
-   ofstream runFile("runs/run_" + to_string(runCount) + ".bin", ios::binary); // opens file and writes
+   ofstream runFile("Built files/tmp_runs/run_" + to_string(runCount) + ".bin", ios::binary); // opens file and writes
    if (!runFile)
    {
       cerr << "Could not open runs/run_" << runCount << ".bin for writing" << endl;
@@ -67,22 +67,24 @@ void flushRun(map<string, vector<pair<int, int>>> &postings, int &runCount) // a
 
 int main(int argc, char **argv)
 {
-   filesystem::remove_all("runs");
-   filesystem::create_directory("runs");
-   ifstream file("collection.tsv"); // Opens the collection.tsv file for reading
+   string collection_path = (argc > 1) ? argv[1] : "collection.tsv";
+
+   filesystem::remove_all("Built files/tmp_runs");
+   filesystem::create_directory("Built files/tmp_runs");
+   ifstream file(collection_path); // Opens the collection.tsv file for reading
    if (!file)
    {
       cerr << "Could not open collection.tsv" << endl;
       return 1;
    }
-   ofstream mappingFile("docid_map.bin", ios::binary); // Writes to a binary file about the docIDs
+   ofstream mappingFile("Built files/docid_map.bin", ios::binary); // Writes to a binary file about the docIDs
    if (!mappingFile)
    {
-      cerr << "Could not open docid_map.bin for writing" << endl;
+      cerr << "Could not open Built files/docid_map.bin for writing" << endl;
       return 1;
    }
-   ofstream docLengths("doc_length.bin", ios::binary); // binary file letting us know document length (uint32)
-   map<string, vector<pair<int, int>>> postings;       // map of terms to a vector of pairs (docID, frequency) - note that the map automatically sorts by alphabetical order, which is imp for merger.cpp
+   ofstream docLengths("Built files/doc_length.bin", ios::binary); // binary file letting us know document length (uint32)
+   map<string, vector<pair<int, int>>> postings;                   // map of terms to a vector of pairs (docID, frequency) - note that the map automatically sorts by alphabetical order, which is imp for merger.cpp
    size_t postingCount = 0;
    int runCount = 0;
    int nextDocID = 0;
@@ -133,7 +135,7 @@ int main(int argc, char **argv)
    }
    mappingFile.close();
    docLengths.close();
-   ofstream count_file("runs/run_count.txt");
+   ofstream count_file("Built files/tmp_runs/runCount.txt");
    count_file << runCount; // need to keep tarack of number of runfiles - every time we collect 5 million postings we call flushrun
    count_file.close();
    cout << "Done, parsed " << nextDocID << " documents, " << runCount << " runs" << endl;

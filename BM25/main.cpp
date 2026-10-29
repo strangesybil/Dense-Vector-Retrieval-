@@ -20,7 +20,7 @@ int main()
 {
     string query;
     IndexData data;
-    loadIndexData(data, "lexicon.txt", "doc_length.bin", "collection.tsv");
+    loadIndexData(data, "Built files/lexicon.txt", "Built files/doc_length.bin", "Data/new.tsv");
 
     bool conjunctive = false;
 
