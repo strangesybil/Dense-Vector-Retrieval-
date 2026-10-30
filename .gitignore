@@ -20,4 +20,4 @@ BM25/test_varbyte
 BM25/test_inverlist
 
 # run files
-Runs/
+Runs/.venv/

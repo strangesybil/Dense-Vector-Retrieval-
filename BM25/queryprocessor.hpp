@@ -99,7 +99,7 @@ double ranking(uint32_t termfreq, uint32_t document_length, double avgdoclength,
     return bm25;
 }
 // AND
-vector<ranked> conjunctiveDAAT(double averageDocLength, const vector<uint32_t> &documentLengths, const vector<string> &terms, const map<string, LexEntry> &lexicon, size_t limit, uint32_t numDocs, const string &indexFile = "index.bin")
+vector<ranked> conjunctiveDAAT(double averageDocLength, const vector<uint32_t> &documentLengths, const vector<string> &terms, const map<string, LexEntry> &lexicon, size_t limit, uint32_t numDocs, const string &indexFile = "Built files/index.bin")
 { // only documents with BOTH
     // start daat process
     BestRes res{limit};
@@ -188,15 +188,15 @@ bool terminatedisjunctive(const vector<uint32_t> &documents)
     }
     return true;
 }
-vector<ranked> disjunctiveDAAT(double averageDocLength, const vector<uint32_t> &documentLengths, const vector<string> &terms, const map<string, LexEntry> &lexicon, size_t limit, uint32_t numDocs, const string &indexFile = "index.bin")
-{ // we take the smallest number so we don't skip 
+vector<ranked> disjunctiveDAAT(double averageDocLength, const vector<uint32_t> &documentLengths, const vector<string> &terms, const map<string, LexEntry> &lexicon, size_t limit, uint32_t numDocs, const string &indexFile = "Built files/index.bin")
+{                                           // we take the smallest number so we don't skip
     vector<unique_ptr<InvertedList>> lists; // visit every number that appears on ANY list
     vector<double> idocfreqs;
     for (auto &t : terms)
     {
         auto list = make_unique<InvertedList>();
         if (!list->open(t, lexicon, indexFile))
-            continue; // not in index, so skip ahead
+            continue;                                                // not in index, so skip ahead
         idocfreqs.push_back(inversedocfreq(list->getDF(), numDocs)); // for ranking
         lists.push_back(std::move(list));
     }
@@ -236,7 +236,7 @@ vector<ranked> disjunctiveDAAT(double averageDocLength, const vector<uint32_t> &
     return res.bestofbest(); // return the best results
 }
 
-vector<ranked> search(const string &query, bool conjunctive, IndexData &data, size_t limit = 10, const string &indexFile = "index.bin")
+vector<ranked> search(const string &query, bool conjunctive, IndexData &data, size_t limit = 10, const string &indexFile = "Built files/index.bin")
 {
     vector<string> terms = clean_query(query); // clean query and tokenize
     if (terms.empty())
