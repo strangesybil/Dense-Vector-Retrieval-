@@ -52,25 +52,24 @@ Note: total latency per query = BM25 time + re-rank time.
 | 8 | 200            | 200      |            |     |          |          |
 
 ## Results (from trec_eval)
-### DL 2019
-| System        | MRR@10 | Recall@100 | NDCG@10 | NDCG@100 |
-|---------------|--------|------------|---------|----------|
-| BM25          |        |            |         |          |
-| HNSW (best)   |        |            |         |          |
-| Re-rank @100  |        |            |         |          |
-| Re-rank @1000 |        |            |         |          |
+### dl19
+| System |MRR@10 | Recall@100 | NDCG@10 | NDCG@100|
+|---|---|---|---|---|
+| bm25 | 0.611 | 0.554 | 0.451 | 0.532 |
+| rerank @100 | 0.826 | 0.554 | 0.687 | 0.599 |
+| rerank @1000 | 0.828 | 0.645 | 0.702 | 0.662 |
 
-### DL 2020
-(same table)
+### dl20
+| System |MRR@10 | Recall@100 | NDCG@10 | NDCG@100|
+|   bm25 | 0.621 |   0.610    |  0.482  | 0.503 |
+|rerank@100| 0.758 | 0.610 | 0.640 | 0.573 |
+| rerank @1000 | 0.782 | 0.701 | 0.658 | 0.627 |
 
-### Dev
-| System        | MRR@10 | Recall@100 | MAP |
-|---------------|--------|------------|-----|
-| BM25          |        |            |     |
-| HNSW (best)   |        |            |     |
-| Re-rank @100  |        |            |     |
-| Re-rank @1000 |        |            |     |
-
+### dev
+| System |MRR@10 | Recall@100 | MAP|
+| bm25  | 0.390 | 0.795 | 0.394 |
+| rerank @100 | 0.557 | 0.795 | 0.552 |
+| rerank @1000 | 0.577 | 0.884 | 0.574 |
 ## Observations (for the report)
 - Dev queries touch most of the 1M docs because of common words ("what", "is"), which makes BM25 OR search slow
 -
