@@ -21,3 +21,5 @@ BM25/test_inverlist
 
 # run files
 Runs/.venv/
+.venv/
+Runs/
