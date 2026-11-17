@@ -8,3 +8,12 @@ then: head -3 Runs/bm25_dl19.txt
 
 **Reranking**
 Type: python Rerank/rerank.py
+
+**HNSW and Fuse**
+python hnsw.py                                                     
+                                                                   
+cd ..\Eval                                 
+python fuse.py                                   
+python rerank_k.py                               
+python PlotLength.py
+python evaluate.py
