@@ -1,3 +1,4 @@
+#Libraries
 import os
 import glob
 import time
@@ -10,16 +11,18 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
+#Directs output to the results folder
 BASE = os.path.dirname(os.path.abspath(__file__))
 RUNS = os.path.join(BASE, "..", "Runs")
 RESULTS = os.path.join(BASE, "results")
 
 # M, efConstruction, efSearch
 SETTINGS = [(4, 50, 50), (8, 100, 100), (8, 200, 200)]
-RUN_FLAT = True
+RUN_FLAT = True # for the baseline, exact search with IndexFlatIP, which is slow but accurate.
 TOPK = 1000
 LAT_QUERIES = 200  # how many queries we time one by one
 
+# paths to the data files given from the drive
 passage_h5 = os.path.join(BASE, "msmarco_passages_embeddings_subset.h5")
 passage_ids = os.path.join(BASE, "msmarco_passages_subset.tsv")
 collection = os.path.join(BASE, "collection.tar.gz")
@@ -44,12 +47,12 @@ shutil.rmtree(RESULTS, ignore_errors=True)
 shutil.rmtree(os.path.join(BASE, "runs"), ignore_errors=True)
 os.makedirs(RESULTS)
 
-
+# reads the h5 file and returns the IDs as strings and the embeddings as float32 for faiss.
 def load_h5(path):
     with h5py.File(path, "r") as f:
         return np.array(f["id"]).astype(str), np.array(f["embedding"]).astype(np.float32)
 
-
+# reads qrels into {query id: {passage id: relevance}} format, which is what get_scores() needs.
 def read_qrels(path):
     rels = {}
     for line in open(path):
@@ -133,20 +136,20 @@ if RUN_FLAT:
     configs.append(("flat", None, None, None))
 
 process = psutil.Process()
-results = []
+results = [] # empty list to hold the results for every index and every query set, will be saved to results.csv at the end.
 
-for n, (label, M, efc, efs) in enumerate(configs):
+for n, (label, M, efc, efs) in enumerate(configs): # going through the index configurations
     print(f"\n[{n + 1}/{len(configs)}] {label}")
 
     ram_before = process.memory_info().rss / 1024 ** 2
-    start = time.time()
+    start = time.time() # start the timer for building the index for the report
     if M is None:
-        index = faiss.IndexFlatIP(d)  # exact search
+        index = faiss.IndexFlatIP(d)  # exact search, d is 384
     else:
-        index = faiss.IndexHNSWFlat(d, M, faiss.METRIC_INNER_PRODUCT)
+        index = faiss.IndexHNSWFlat(d, M, faiss.METRIC_INNER_PRODUCT) 
         index.hnsw.efConstruction = efc
     index.add(xb)
-    build_time = time.time() - start
+    build_time = time.time() - start # seconds the build took
     ram = process.memory_info().rss / 1024 ** 2 - ram_before
     if M is not None:
         index.hnsw.efSearch = efs
@@ -160,12 +163,11 @@ for n, (label, M, efc, efs) in enumerate(configs):
     print(f"build {build_time:.1f}s | RAM +{ram:.0f} MB | latency {latency:.2f} ms/query")
 
     res = {"name": label, "M": M, "efC": efc, "efS": efs,
-           "build_s": build_time, "ram_mb": ram, "latency_ms": latency}
+        "build_s": build_time, "ram_mb": ram, "latency_ms": latency}
 
-    for name, (ids, vecs, rels) in query_sets.items():
+    for name, (ids, vecs, rels) in query_sets.items(): # loops over dev dl19 and dl20
         D, I = index.search(vecs, TOPK)
-        run = {}
-        # run file: qid Q0 pid rank score tag
+        run = {} # will map query id to the ranked list of passage IDs for scoring
         with open(os.path.join(RUNS, f"{label}_{name}.txt"), "w") as f:
             for qid, scores, rows in zip(ids, D.tolist(), I.tolist()):
                 run[qid] = []

@@ -1,0 +1,10 @@
+name,set,avg_ms,p95_ms
+hnsw_m4_ef50,dl19,0.33,0.52
+hnsw_m4_ef50,dl20,0.27,0.47
+hnsw_m4_ef50,dev,0.24,0.39
+hnsw_m8_ef100,dl19,0.54,0.68
+hnsw_m8_ef100,dl20,0.57,0.74
+hnsw_m8_ef100,dev,0.59,0.87
+hnsw_m8_ef200,dl19,1.11,1.28
+hnsw_m8_ef200,dl20,1.09,1.43
+hnsw_m8_ef200,dev,1.22,1.82
