@@ -27,25 +27,26 @@ QRELS = {
     "dev":  "Data/qrels.dev.trec.tsv",
 }
 
-GRADED = {
-    "MRR@10":     ["-l", "2", "-M", "10", "-m", "recip_rank"],
-    "Recall@100": ["-l", "2", "-m", "recall.100"],
-    "NDCG@10":    ["-m", "ndcg_cut.10"],
-    "NDCG@100":   ["-m", "ndcg_cut.100"],
-}
-BINARY = {
-    "MRR@10":     ["-M", "10", "-m", "recip_rank"],
-    "Recall@100": ["-m", "recall.100"],
-    "MAP":        ["-m", "map"],
+def graded(k):
+    return {
+        "MRR@k":    ["-l", "2", "-M", str(k), "-m", "recip_rank"],
+        "Recall@k": ["-l", "2", "-m", f"recall.{k}"],
+        "NDCG@k":   ["-m", f"ndcg_cut.{k}"],
+        "MAP@k":    ["-l", "2", "-m", "map"],
 }
 
+def binary(k):
+    return {
+        "MRR@k":    ["-M", str(k), "-m", "recip_rank"],
+        "Recall@k": ["-m", f"recall.{k}"],
+        "MAP@k":    ["-m", "map"],
+    }
 KS = list(range(10, 101, 10))
 os.makedirs("Eval/ploteval", exist_ok=True)
 os.makedirs("Runs/topk", exist_ok=True)
 
 for name, qrels in QRELS.items():
-    measures = BINARY if name == "dev" else GRADED
-
+    measures = binary if name == "dev" else graded
     # make top-k versions of both runs once per k
     bm25_k, rerank_k = {}, {}
     for k in KS:
@@ -53,11 +54,11 @@ for name, qrels in QRELS.items():
         rerank_k[k] = truncate(f"Runs/ksweep/rerank{k}_{name}.txt", k, f"Runs/topk/rerank{k}_{name}.txt")
 
     plt.figure(figsize=(8.5, 4.5))
-    for metric, flags in measures.items():
-        rr = [trecfairy(qrels, rerank_k[k], flags) for k in KS]
-        bm = [trecfairy(qrels, bm25_k[k], flags) for k in KS]
+    for metric in measures(10):
+        rr = [trecfairy(qrels, rerank_k[k],measures(k)[metric]) for k in KS]
+        bm = [trecfairy(qrels, bm25_k[k], measures(k)[metric]) for k in KS]
         line, = plt.plot(KS, rr, marker="o", label=f"re-ranked {metric}")
-        plt.plot(KS, bm, linestyle="--", marker="o", color=line.get_color(), label=f"BM25 {metric}")
+        plt.plot(KS, bm, linestyle="--", marker="o", color=line.get_color(), label=f"{metric} - BM25")
         print(name, metric, "BM25 by k:", [round(v, 3) for v in bm])
         print(name, metric, "rerank by k:", [round(v, 3) for v in rr])
 
