@@ -23,13 +23,13 @@ int main(int argc, char **argv)
     {
         cerr << "Error with number of arguments. Try again.";
     }
-    string queriesPath = argv[1];
-    string qrelsPath = argv[2];
-    string outPath = argv[3]; // writing to
-    size_t k;
+    string queriesPath = argv[1]; // from queries.eval.tsv
+    string qrelsPath = argv[2];   // qrels.eval.one.tsv
+    string outPath = argv[3];     // writing to bm25_d1l9
+    size_t k;                     // number of results per query
     if (argc > 4)
     {
-        k = stoull(argv[4]);
+        k = stoull(argv[4]); // turning it into a number
     }
     else
     {
@@ -56,18 +56,18 @@ int main(int argc, char **argv)
         istringstream ss(line);
         string qid;
         if (ss >> qid)
-        { // rmb ss reads until first whitespace
-            wanted.insert(qid);
+        {                       // rmb ss reads until first whitespace
+            wanted.insert(qid); // puts all relevant (43) queries into a set so lookups are instant
         }
     }
 
-    cout << "Query ids in qrels: " << wanted.size() << endl;
+    cout << "Query ids in qrels: " << wanted.size() << endl; // check which ones
 
     IndexData data;
 
     loadIndexData(data, "Built files/lexicon.txt", "Built files/doc_length.bin", "Data/new.tsv");
 
-    cout << data.numDocs << endl;
+    cout << data.numDocs << endl; // number of documents in the index
 
     ifstream queries(queriesPath);
     if (!queries)
@@ -86,7 +86,7 @@ int main(int argc, char **argv)
     vector<double> latencies;
     while (getline(queries, line2))
     {
-        if (!line2.empty() && line2.back() == '\r')
+        if (!line2.empty() && line2.back() == '\r') // because i don't wanna drop the last word and this file was made on windows
         {
             line2.pop_back();
         }
@@ -95,13 +95,13 @@ int main(int argc, char **argv)
         {
             continue;
         }
-        string qid = line2.substr(0, tab);
-        string text = line2.substr(tab + 1);
-        if (wanted.find(qid) == wanted.end())
-        { // not a judged query, skip
+        string qid = line2.substr(0, tab);    // what happens before tab
+        string text = line2.substr(tab + 1);  // what happens after the tab
+        if (wanted.find(qid) == wanted.end()) // these are not the droids you are looking for
+        {                                     // not a judged query, skip
             continue;
         }
-        auto t0 = chrono::steady_clock::now();
+        auto t0 = chrono::steady_clock::now(); // timing the search
         vector<ranked> res = search(text, false, data, k);
         auto t1 = chrono::steady_clock::now();
         double ms = chrono::duration<double, milli>(t1 - t0).count();
@@ -109,7 +109,7 @@ int main(int argc, char **argv)
         int rank = 1;
         for (auto &r : res)
         {
-            out << qid << " Q0 " << data.pids[r.second] << " " << rank << " " << r.first << " BM25\n";
+            out << qid << " Q0 " << data.pids[r.second] << " " << rank << " " << r.first << " BM25\n"; // r.second is the internal doc number -> turn into a real pid + r.first is bm25 score
             rank++;
         }
         count++;
@@ -120,9 +120,9 @@ int main(int argc, char **argv)
     sort(latencies.begin(), latencies.end());
     double total = 0;
     for (double ms : latencies)
-        total += ms;
-    cerr << "Average latency " << total / latencies.size() << " milliseconds " << endl;
-    cerr << "P95 Latency " << latencies[latencies.size() * 0.95] << " milliseconds " << endl;
+        total += ms;                                                                          // calculate total time
+    cerr << "Average latency " << total / latencies.size() << " milliseconds " << endl;       // average time per query
+    cerr << "P95 Latency " << latencies[latencies.size() * 0.95] << " milliseconds " << endl; // 95th percentile latency -> catch the slow cases
 
     return 0;
 }
